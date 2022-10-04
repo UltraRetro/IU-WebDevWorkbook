@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>DLBCSWAD01 Assignment 6</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/uikit@3.15.10/dist/css/uikit.min.css" />
+    <script src="https://cdn.jsdelivr.net/npm/uikit@3.15.10/dist/js/uikit.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/uikit@3.15.10/dist/js/uikit-icons.min.js"></script>
+
+    <style>
+        .headline {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .table-container {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 100%;
+        }
+        .formInput {
+            width: 50%;
+        }
+        .formNumber {
+            width: 20%;
+        }
+        .formInputName {
+            width: 35%;
+        }
+        .formCountry {
+            width: 25%;
+        }
+        .orderButton {
+            width: 100%;
+            align-items: center;
+            justify-content: center;
+            display: flex;
+        }
+        .summaryContainer {
+            width: 100%;
+        }
+        .errorList {
+            color: red;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        .errorHeadline {
+            text-align: center;
+            color: red;
+            font-size: 21px;
+        }
+        .successHeadline {
+            text-align: center;
+            color: green;
+            font-size: 21px;
+        }
+        footer {
+            position: absolute;
+            bottom: 0;
+            text-align: left;
+        }
+    </style>
+
+</head>
+<body>
+    <div class="headline">
+        <h2>Computer Parts Order Form</h2>
+    </div>
+
+    <div class="formContainer">
+        <b>Name: </b> <input class="uk-input formInputName" type="text" placeholder="Enter Name" id="formName"/>
+        <b>Surname: </b> <input class="uk-input formInputName" type="text" placeholder="Enter Surname" id="formSurName"/>
+        <br/>
+        <br/>
+        <b>Street: </b> <input class="uk-input formInput" type="text" placeholder="Enter Street" id="formStreetName"/>
+        <b>Number: </b> <input class="uk-input formNumber" type="number" id="formNumber" />
+        <br/>
+        <br/>
+        <b>Postal Code: </b> <input class="uk-input formNumber" type="number" placeholder="Enter Postal Code" id="formPostalCode" />
+        <b>Country: </b>
+        <select class="uk-select formCountry" id="formCountry" >
+            <option value="" disabled hidden selected>Please Select</option>
+            <option value="germany">Germany</option>
+            <option value="austria">Austria</option>
+            <option value="netherlands">Netherlands</option>
+            <option value="switzerland">Switzerland</option>
+        </select>
+
+    </div>
+
+    <div class="table-container">
+        <table class="uk-table uk-table-divider uk-table-hover uk-table-striped">
+            <thead>
+                <tr>
+                    <th>Item</th>
+                    <th>Price</th>
+                    <th>Quantity</th>
+                    <th>Add to Order</th>
+                </tr>
+            </thead>
+            <tbody id="tableBody">
+            </tbody>
+        </table>
+    </div>
+    <div class="summaryContainer">
+        <p id="totalPrice"><b>Total Price: </b></p>
+        <p id="finalOrderListHeadline"><b>You are ordering: </b></p>
+        <p id="finalOrderList" class="finalOrderList">Nothing</p>
+
+    </div>
+    <div class="orderButton">
+        <button class="uk-button uk-button-large uk-button-primary" onclick="orderNowButton()">Order now</button>
+    </div>
+    <div class="uk-align-center">
+        <p id="errorHeadline" class="errorHeadline"></p>
+        <p id="successHeadline" class="successHeadline"></p>
+        <div class="errorList">
+            <p id="errorList"></p>
+        </div>
+    </div>
+    <footer>
+        <div class="uk-card-footer">
+            <ln>Created by Danny Köhler as part of the Web Application Development Workbook</ln><br/>
+            <ln>Course: DLBCSWAD01</ln><br/>
+            <ln>Matriculation Number: 92009382</ln>
+        </div>
+    </footer>
+
+
+    <script>
+
+        const tableContent = new Map([
+            ["Ryzen 9 7900X", 669.99],
+            ["Ryzen 9 7950X", 849.99],
+            ["Intel Core i9 12900K", 630.99],
+            ["Random SSD", 75.99],
+            ["RTX 3070", 670.99],
+            ["RTX 3080", 900.99],
+            ["Radeon RX 6800", 799.95],
+            ["Radeon RX 6700", 469.98]
+        ])
+
+        var shoppingCart = new Map();
+        var globalPrice = 0;
+
+        const tableBody = document.getElementById("tableBody")
+
+        for (const [name, price] of tableContent) {
+            const row = document.createElement("tr");
+            const cell = document.createElement("td");
+            const cell2 = document.createElement("td");
+            const cell3 = document.createElement("td");
+            const cell4 = document.createElement("td");
+
+            const qtyInput = document.createElement("input");
+            qtyInput.type = "number";
+            qtyInput.min = "0";
+            qtyInput.step = "1";
+            qtyInput.defaultValue = "1";
+            qtyInput.id = "qty"+name;
+
+            const subButton = document.createElement("button")
+            subButton.className = "uk-button uk-button-primary uk-button-small"
+            subButton.innerHTML = "Add"
+            subButton.id = "sub"+name;
+            subButton.onclick = function() {clickEvent(name)}
+
+            cell.appendChild(document.createTextNode(name))
+            cell2.appendChild(document.createTextNode("$"+price))
+            cell3.appendChild(qtyInput)
+            cell4.appendChild(subButton)
+            row.appendChild(cell)
+            row.appendChild(cell2)
+            row.appendChild(cell3)
+            row.appendChild(cell4)
+            tableBody.appendChild(row)
+        }
+
+        function clickEvent(name) {
+            const qtyInput = document.getElementById("qty"+name).value
+            const price = tableContent.get(name);
+            globalPrice += price*qtyInput;
+
+            if (shoppingCart.has(name)) {
+                var tmpQty = shoppingCart.get(name)
+                shoppingCart.set(name, tmpQty+=parseFloat(qtyInput))
+            } else {
+                shoppingCart.set(name, parseFloat(qtyInput))
+            }
+
+            updateSummary()
+        }
+
+        function updateSummary() {
+            const finalOrderList = document.getElementById("finalOrderList")
+            const totalPrice = document.getElementById("totalPrice");
+
+            totalPrice.innerHTML = "<b>Total Price: </b>$"+globalPrice.toFixed(2)
+            if (shoppingCart) {
+                finalOrderList.innerHTML = ""
+                for (const [name, qty] of shoppingCart) {
+                    const listP = document.createElement("ln")
+                    listP.innerHTML = qty+"x "+name +"<br/>"
+                    finalOrderList.appendChild(listP)
+                }
+
+            }
+
+        }
+
+        function errorWriter (errors) {
+            const errorList = document.getElementById("errorList")
+            const errorHeadline = document.getElementById("errorHeadline")
+            const successHeadline = document.getElementById("successHeadline")
+            successHeadline.innerHTML = ""
+            errorHeadline.innerHTML = "<b>Order Incomplete!<b/><br/>"
+            errorList.innerHTML = ""
+            for (const error of errors) {
+                const listP = document.createElement("ln")
+                listP.innerHTML = "<b>"+error+"</b><br/>"
+                errorList.appendChild(listP)
+            }
+        }
+
+        function successWriter () {
+            const errorList = document.getElementById("errorList")
+            const errorHeadline = document.getElementById("errorHeadline")
+            const successHeadline = document.getElementById("successHeadline")
+            errorHeadline.innerHTML = ""
+            errorList.innerHTML = ""
+            successHeadline.innerHTML = "Order recieved!"
+
+        }
+
+        function orderNowButton () {
+            var errorArray = []
+            var errorCount = 0
+
+            if (!shoppingCart) {
+                errorArray.push("The Shopping Cart is Empty!")
+                errorCount++
+            }
+            if (!document.getElementById("formName").value) {
+                errorArray.push("Please enter a Name")
+                errorCount++
+            }
+            if (!document.getElementById("formSurName").value) {
+                errorArray.push("Please enter a Surname")
+                errorCount++
+            }
+            if (!document.getElementById("formStreetName").value) {
+                errorArray.push("Please enter a Street Name")
+                errorCount++
+            }
+            if (!document.getElementById("formNumber").value) {
+                errorArray.push("Please enter a House Number")
+                errorCount++
+            }
+            if (!document.getElementById("formPostalCode").value) {
+                errorArray.push("Please enter a Postal Code")
+                errorCount++
+            }
+            if (!document.getElementById("formCountry").value) {
+                errorArray.push("Please select a Country")
+                errorCount++
+            }
+
+            if (errorCount > 0) {
+                errorWriter(errorArray)
+            } else if (errorCount === 0) {
+                successWriter()
+            } else {
+                console.log("The Error Count is Invalid!")
+            }
+
+        }
+
+
+    </script>
+
+</body>
+</html>
